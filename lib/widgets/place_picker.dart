@@ -23,6 +23,9 @@ class PlacePicker extends StatefulWidget {
   /// API key generated from Google Cloud Console. You can get an API key
   /// [here](https://cloud.google.com/maps-platform/)
   final String apiKey;
+  // API Header from google_api_header, can be used to restrict the
+  // Google Cloud Key to a specific iOS and Android app
+  final Map<String, String>? apiHeaders;
 
   /// Location to be displayed when screen is showed. If this is set or not null, the
   /// map does not pan to the user's current location.
@@ -82,6 +85,7 @@ class PlacePicker extends StatefulWidget {
     this.searchAutoCompleteBuilder,
     this.mapOptions,
     this.myLocationIcon,
+    this.apiHeaders,
   }) {
     if (this.localizationItem == null) {
       this.localizationItem = new LocalizationItem();
@@ -329,10 +333,6 @@ class PlacePickerState extends State<PlacePicker> {
 
     previousSearchTerm = place;
 
-    if (context == null) {
-      return;
-    }
-
     clearOverlay();
 
     setState(() {
@@ -398,7 +398,8 @@ class PlacePickerState extends State<PlacePicker> {
             "${this.locationResult!.latLng!.longitude}";
       }
 
-      final response = await http.get(Uri.parse(endpoint));
+      final response = await doGet(Uri.parse(endpoint),
+          headers: widget.apiHeaders);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -450,6 +451,10 @@ class PlacePickerState extends State<PlacePicker> {
     }
   }
 
+  Future<http.Response> doGet(Uri url, {Map<String, String>? headers}) {
+    return http.get(url, headers: headers);
+  }
+
   /// To navigate to the selected place from the autocomplete list to the map,
   /// the lat,lng is required. This method fetches the lat,lng of the place and
   /// proceeds to moving the map to that location.
@@ -462,7 +467,7 @@ class PlacePickerState extends State<PlacePicker> {
               "language=${widget.localizationItem!.languageCode}&" +
               "placeid=$placeId");
 
-      final response = await http.get(url);
+      final response = await doGet(url, headers: widget.apiHeaders);
 
       if (response.statusCode != 200) {
         throw Error();
@@ -547,7 +552,7 @@ class PlacePickerState extends State<PlacePicker> {
           "key=${widget.apiKey}&location=${latLng.latitude},${latLng.longitude}"
           "&radius=150&language=${widget.localizationItem!.languageCode}");
 
-      final response = await http.get(url);
+      final response = await doGet(url, headers:widget.apiHeaders);
 
       if (response.statusCode != 200) {
         throw Error();
