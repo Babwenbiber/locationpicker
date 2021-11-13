@@ -595,7 +595,7 @@ class PlacePickerState extends State<PlacePicker> {
           "language=${widget.localizationItem!.languageCode}&"
           "key=${widget.apiKey}");
 
-      final response = await http.get(url);
+      final response = await doGet(url, headers: widget.apiHeaders);
 
       if (response.statusCode != 200) {
         throw Error();
